@@ -10,6 +10,8 @@ import 'package:open_project_time_tracker/modules/timer/ui/time_entry_summary/ti
 
 import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 
+import '../../../../extensions/duration.dart';
+
 // ignore: must_be_immutable
 class TimeEntrySummaryPage
     extends
