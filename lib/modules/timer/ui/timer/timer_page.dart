@@ -12,6 +12,7 @@ import 'package:open_project_time_tracker/modules/timer/ui/timer/timer_bloc.dart
 
 import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 
+import '../../../../extensions/duration.dart';
 import '../../../../app/ui/widgets/configured_outlined_button.dart';
 
 // ignore: must_be_immutable
