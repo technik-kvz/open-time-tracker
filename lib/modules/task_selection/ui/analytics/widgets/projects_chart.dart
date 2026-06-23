@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:open_project_time_tracker/l10n/app_localizations.dart';
+
 import '../../../../../app/ui/widgets/chart_text_style.dart';
 import '../../../../../app/ui/widgets/configured_card.dart';
 import '../../../../../app/ui/widgets/configured_pie_chart.dart';
-import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 
 class ProjectChartData {
   final String title;

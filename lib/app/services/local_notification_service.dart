@@ -43,9 +43,11 @@ class LocalNotificationService {
   Future<void> setup() async {
     const androidSetting = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSetting = DarwinInitializationSettings();
+    const linuxSetting = LinuxInitializationSettings(defaultActionName: "open-time-tracker-KVZ");
     const initSettings = InitializationSettings(
       android: androidSetting,
       iOS: iosSetting,
+      linux: linuxSetting
     );
 
     try {

@@ -45,7 +45,7 @@ class WorkPackagesListBloc
     WidgetsBinding.instance.addObserver(this);
   }
 
-  setProject(String projectId) {
+  void setProject(String projectId) {
     _projectId = projectId;
   }
 

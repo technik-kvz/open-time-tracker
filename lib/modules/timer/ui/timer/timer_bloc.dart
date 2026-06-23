@@ -12,10 +12,10 @@ part 'timer_bloc.freezed.dart';
 @freezed
 class TimerState with _$TimerState {
   const factory TimerState.idle({
-    required Duration timeSpent,
+    required DateTime startTime,
+    required DateTime endTime,
     required String title,
     required String subtitle,
-    required bool hasStarted,
     required bool isActive,
   }) = _Idle;
 }
@@ -45,11 +45,11 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
 
   TimerBloc(this._timerRepository, this._liveActivityManager)
     : super(
-        const TimerState.idle(
-          timeSpent: Duration(),
+        TimerState.idle(
+          startTime: DateTime.now(),
+          endTime: DateTime.now(),
           title: '',
           subtitle: '',
-          hasStarted: false,
           isActive: false,
         ),
       );
@@ -57,9 +57,9 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
   Future<void> updateState() async {
     final data = await Future.wait([
       _timerRepository.timeEntry,
-      _timerRepository.hasStarted,
       _timerRepository.isActive,
-      _timerRepository.timeSpent,
+      _timerRepository.startTime,
+      _timerRepository.endTime,
     ]);
     try {
       final timeEntry = data[0] as TimeEntry?;
@@ -72,20 +72,23 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
         _currentTaskTitle = null;
         // Emit empty idle state
         emit(
-          const TimerState.idle(
-            timeSpent: Duration(),
+          TimerState.idle(
+            startTime: DateTime.now(),
+            endTime: DateTime.now(),
             title: '',
             subtitle: '',
-            hasStarted: false,
             isActive: false,
           ),
         );
         return;
       }
 
-      final hasStarted = data[1] as bool;
-      final isActive = data[2] as bool;
-      final timeSpent = data[3] as Duration;
+      DateTime startTime = DateTime.tryParse(timeEntry.startTime)!;
+      DateTime endTime = DateTime.tryParse(timeEntry.endTime)!;
+
+      final isActive = data[1] as bool;
+      startTime = data[2] as DateTime;
+      endTime = data[3] as DateTime;
 
       // Detect task switch or timer becoming inactive while live activity is running
       if (_liveActivitySessionStart != null) {
@@ -106,10 +109,10 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
 
       emit(
         TimerState.idle(
-          timeSpent: timeSpent,
+          startTime: startTime,
+          endTime: endTime,
           title: timeEntry.workPackageSubject,
           subtitle: timeEntry.projectTitle,
-          hasStarted: hasStarted,
           isActive: isActive,
         ),
       );
@@ -129,24 +132,20 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
     await _timerRepository.startTimer(startTime: DateTime.now());
 
     // Get the actual time spent to handle resume correctly
-    final timeSpent = await _timerRepository.timeSpent;
-
-    // Calculate session start: if resuming (timeSpent > 0), offset by existing time
-    // This ensures the live activity continues from where it left off, not from 0:00:00
-    final sessionStart = DateTime.now().add(-timeSpent);
+    final startTime = await _timerRepository.startTime;
 
     // Live activity should show current session time only, not accumulated time from other tasks
     try {
       await _liveActivityManager.startLiveActivity(
         activityModel: LiveActivityModel(
-          startTimestamp: (sessionStart.millisecondsSinceEpoch / 1000).round(),
+          startTimestamp: (startTime.millisecondsSinceEpoch / 1000).round(),
           title: state.title,
           subtitle: state.subtitle,
           tag: _l10n().generic__in_progress,
         ).toMap(),
       );
       // Only set session start after successful start
-      _liveActivitySessionStart = sessionStart;
+      _liveActivitySessionStart = startTime;
     } on LiveActivityPermissionException catch (e) {
       // Permission was denied - live activity won't be shown, but timer still works
       // The proactive permission check in TimerPage should prevent this scenario
@@ -166,8 +165,12 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
   }
 
   Future<void> finish() async {
-    await _timerRepository.stopTimer(stopTime: DateTime.now());
-    await _liveActivityManager.stopLiveActivity();
+    if (await _timerRepository.isActive) {
+      await _timerRepository.stopTimer(stopTime: DateTime.now());
+    }
+    if (_liveActivitySessionStart != null) {
+      await _liveActivityManager.stopLiveActivity();
+    }
     _liveActivitySessionStart = null;
     await updateState();
     emitEffect(const TimerEffect.finish());
@@ -175,7 +178,8 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
 
   Future<void> add(Duration duration) async {
     await _timerRepository.add(duration);
-    final timeSpent = state.timeSpent + duration;
+    final startTime = state.startTime;
+    final endTime = state.endTime.add(duration);
     // When manually adding time, shift the live activity session start backwards
     // so the timer shows the additional time
     if (_liveActivitySessionStart != null) {
@@ -197,6 +201,6 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
         debugPrint('Failed to update live activity: $e');
       }
     }
-    emit(state.copyWith(timeSpent: timeSpent, hasStarted: true));
+    emit(state.copyWith(startTime: startTime, endTime: endTime, isActive: true));
   }
 }

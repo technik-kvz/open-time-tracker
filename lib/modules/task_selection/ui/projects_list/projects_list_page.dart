@@ -5,8 +5,8 @@ import 'package:open_project_time_tracker/app/ui/bloc/bloc_page.dart';
 import 'package:open_project_time_tracker/app/ui/widgets/configured_shimmer.dart';
 import 'package:open_project_time_tracker/app/ui/widgets/list_item.dart';
 import 'package:open_project_time_tracker/app/ui/widgets/screens/scrollable_screen.dart';
-import 'package:open_project_time_tracker/modules/task_selection/ui/projects_list/projects_list_bloc.dart';
 import 'package:open_project_time_tracker/l10n/app_localizations.dart';
+import 'package:open_project_time_tracker/modules/task_selection/ui/projects_list/projects_list_bloc.dart';
 
 class ProjectsListPage
     extends

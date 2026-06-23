@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:open_project_time_tracker/l10n/app_localizations.dart';
-import 'package:open_project_time_tracker/app/ui/bloc/bloc_page.dart';
-
 import 'package:open_project_time_tracker/app/app_router.dart';
+import 'package:open_project_time_tracker/app/ui/bloc/bloc_page.dart';
 import 'package:open_project_time_tracker/app/ui/widgets/configured_shimmer.dart';
 import 'package:open_project_time_tracker/app/ui/widgets/screens/scrollable_screen.dart';
+import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 import 'package:open_project_time_tracker/modules/task_selection/ui/time_entries_list/time_entries_list_bloc.dart';
-import 'package:open_project_time_tracker/modules/task_selection/ui/time_entries_list/widgets/total_time_list_item.dart';
 import 'package:open_project_time_tracker/modules/task_selection/ui/time_entries_list/widgets/date_navigator.dart';
+import 'package:open_project_time_tracker/modules/task_selection/ui/time_entries_list/widgets/total_time_list_item.dart';
 
 import 'widgets/time_entry_list_item.dart';
 
@@ -153,12 +152,16 @@ class TimeEntriesListPage
                       )
                     : SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
+                          //print("-------------------1------------------- \n");
                           final timeEntry = timeEntries[index];
                           return TimeEntryListItem(
                             workPackageSubject: timeEntry.workPackageSubject,
                             projectTitle: timeEntry.projectTitle,
+                            startTime: timeEntry.startTime,
+                            endTime: timeEntry.endTime,
                             hours: timeEntry.hours,
                             comment: timeEntry.comment,
+                            customField: timeEntry.customField,
                             action: () async {
                               await context
                                   .read<TimeEntriesListBloc>()
@@ -226,8 +229,11 @@ class _ItemPlaceholder extends StatelessWidget {
     return const TimeEntryListItem(
       workPackageSubject: '',
       projectTitle: 'timeEntry.projectTitle',
+      startTime: 'null',
+      endTime: 'null',
       hours: Duration(),
       comment: '',
+      customField: {},
     );
   }
 }

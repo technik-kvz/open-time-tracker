@@ -80,8 +80,11 @@ class NotificationSelectionListPage
                       return TimeEntryListItem(
                         workPackageSubject: timeEntry.workPackageSubject,
                         projectTitle: timeEntry.projectTitle,
+                        startTime: timeEntry.startTime,
+                        endTime: timeEntry.endTime,
                         hours: timeEntry.hours,
                         comment: timeEntry.comment,
+                        customField: timeEntry.customField,
                         action: () {
                           context
                               .read<NotificationSelectionListBloc>()

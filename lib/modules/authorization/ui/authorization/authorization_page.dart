@@ -42,18 +42,20 @@ class AuthorizationPage
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 64.0),
         child: Center(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Spacer(flex: 4),
+              const Spacer(flex: 1),
               LayoutBuilder(
                 builder: (context, constraints) => SizedBox(
                   width: constraints.maxWidth * 0.3,
                   child: Image.asset(AssetImages.logo),
                 ),
               ),
-              const Spacer(flex: 3),
+              const Spacer(flex: 1),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   FilledButton(
                     onPressed: state.canAuthorize

@@ -131,7 +131,7 @@ class LoggingInterceptor extends Interceptor {
     logPrint('$key: $v');
   }
 
-  void _printAll(msg) {
+  void _printAll(dynamic msg) {
     final payload = msg.toString();
 
     if (splitPayload) {

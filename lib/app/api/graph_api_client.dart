@@ -30,9 +30,10 @@ class GraphApiClient implements ApiClient {
             RequestOptions options,
             RequestInterceptorHandler handler,
           ) async {
-            options.connectTimeout = const Duration(seconds: 5);
+            options.connectTimeout = const Duration(seconds: 3);
             options.receiveTimeout = const Duration(seconds: 3);
-            options.baseUrl = 'https://graph.microsoft.com';
+            options.baseUrl = 'http://127.0.0.1';
+            //options.baseUrl = 'https://graph.microsoft.com';
             return handler.next(options);
           },
         ),

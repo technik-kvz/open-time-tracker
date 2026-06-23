@@ -1,6 +1,6 @@
-import 'package:open_project_time_tracker/modules/task_selection/domain/time_entries_repository.dart';
-import 'package:open_project_time_tracker/modules/task_selection/domain/models/weekday_hours.dart';
 import 'package:open_project_time_tracker/modules/task_selection/domain/models/project_hours.dart';
+import 'package:open_project_time_tracker/modules/task_selection/domain/models/weekday_hours.dart';
+import 'package:open_project_time_tracker/modules/task_selection/domain/time_entries_repository.dart';
 
 class TimeAggregationService {
   /// Aggregates time entries by weekday (all Mondays, all Tuesdays, etc.)

@@ -2,11 +2,11 @@ import 'package:open_project_time_tracker/modules/task_selection/domain/time_ent
 
 abstract class TimerRepository {
   Future<bool> get isSet;
-  Future<bool> get hasStarted;
   Future<bool> get isActive;
 
   Future<TimeEntry?> get timeEntry;
-  Future<Duration> get timeSpent;
+  Future<DateTime> get startTime;
+  Future<DateTime> get endTime;
 
   Stream<bool> observeIsSet();
 

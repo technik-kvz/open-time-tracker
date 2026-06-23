@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:open_project_time_tracker/app/ui/bloc/bloc.dart';
@@ -18,6 +17,8 @@ class TimeEntrySummaryState with _$TimeEntrySummaryState {
     required Duration timeSpent,
     required String? comment,
     required List<String>? commentSuggestions,
+    required Map<String, String> customFields,
+    required Map<String, String> customFieldNames,
   }) = _Idle;
 }
 
@@ -56,29 +57,30 @@ class TimeEntrySummaryBloc
           timeSpent: timeEntry.hours,
           comment: timeEntry.comment,
           commentSuggestions: _commentSuggestions,
+          customFields: timeEntry.customField,
+          customFieldNames: timeEntry.customFieldName,
         ),
       );
     }
   }
 
   Future<void> _init() async {
-    final timeEntry = await _timerRepository.timeEntry;
+    dynamic _timeEntry = await _timerRepository.timeEntry;
+    final workPackageIdString = _timeEntry.workPackageHref.split('/').last;
+    final workPackageId = int.tryParse(workPackageIdString);
+    final timeEntries = await _timeEntriesRepository.list(
+      workPackageId: workPackageId,
+      pageSize: 100,
+    );
+    _timeEntry = await _timerRepository.timeEntry;
     
-    if (timeEntry != null) {
-      final minutes = max(timeEntry.hours.inMinutes, 1);
-      timeEntry.hours = Duration(minutes: minutes);
-      this.timeEntry = timeEntry;
+    if (_timeEntry != null) {
+      this.timeEntry = _timeEntry;
 
       if (_disposed) return; // Check after setup, before emit
       await _emitIdleState();
 
       try {
-        final workPackageIdString = timeEntry.workPackageHref.split('/').last;
-        final workPackageId = int.tryParse(workPackageIdString);
-        final timeEntries = await _timeEntriesRepository.list(
-          workPackageId: workPackageId,
-          pageSize: 100,
-        );
         if (_disposed) return; // Exit after network call if disposed
         
         var comments = timeEntries.map((e) => e.comment ?? '').toSet().toList();
@@ -97,7 +99,10 @@ class TimeEntrySummaryBloc
   }
 
   Future<void> updateTimeSpent(Duration timeSpent) async {
-    timeEntry.hours = timeSpent;
+    timeEntry.hoursValue = timeSpent;
+    if (timeEntry.startTime != "null") {
+      timeEntry.endTime = DateTime.parse(timeEntry.startTime).add(timeSpent).toIso8601String();
+    }
     _emitIdleState();
   }
 
@@ -105,13 +110,21 @@ class TimeEntrySummaryBloc
     timeEntry.comment = comment;
   }
 
+  Future<void> updateCustomField(String customField, String iKey) async {
+    timeEntry.customField[iKey] = customField;
+  }
+  Future<void> updateCustomFieldName(String customFieldName, String iKey) async {
+    timeEntry.customFieldName[iKey] = customFieldName;
+  }
+
   Future<void> submit() async {
     if (_disposed) return;
     emit(const TimeEntrySummaryState.loading());
     try {
       final submittedEntry = await _timerService.submit(timeEntry: timeEntry);
-      if (!_disposed)
+      if (!_disposed) {
         emitEffect(TimeEntrySummaryEffect.complete(timeEntry: submittedEntry));
+      }
     } catch (e) {
       if (_disposed) return;
       _emitIdleState();

@@ -39,9 +39,10 @@ class OAuthClient implements AuthClient {
     // Use flutter_web_auth_2 to handle the OAuth flow
     // This handles the browser launch and callback automatically
     // preferEphemeral: false ensures the session is shared with the browser
+    final String spUri = Uri.parse(redirectUrl).scheme;
     final result = await FlutterWebAuth2.authenticate(
       url: authUrl,
-      callbackUrlScheme: Uri.parse(redirectUrl).scheme,
+      callbackUrlScheme: spUri,
       options: const FlutterWebAuth2Options(intentFlags: ephemeralIntentFlags),
     );
 
@@ -50,28 +51,40 @@ class OAuthClient implements AuthClient {
 
     if (code == null) throw ErrorDescription('authorization_code_null');
 
+    http.Response? tokenResp;
     // Exchange code for tokens
-    final tokenResp = await http.post(
-      Uri.parse(tokenEndpoint),
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: {
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': redirectUrl,
-        'client_id': clientID,
-      },
-    );
-
-    if (tokenResp.statusCode < 200 || tokenResp.statusCode >= 300) {
-      throw ErrorDescription('token_exchange_failed:${tokenResp.statusCode}');
+    try {
+      final Uri pUri = Uri.parse(tokenEndpoint);
+      tokenResp = await http.post(
+        pUri,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {
+          'grant_type': 'authorization_code',
+          'code': code,
+          'redirect_uri': redirectUrl,
+          'client_id': clientID,
+        },
+      );
+    } on Exception catch(e) {
+      final String errorString = jsonEncode(e);
+      print("token_post_failed: $errorString");
     }
 
-    final Map<String, dynamic> json = jsonDecode(tokenResp.body);
-    final accessToken = json['access_token'] as String?;
-    final refreshToken = json['refresh_token'] as String?;
-    if (accessToken == null || refreshToken == null)
-      throw ErrorDescription('tokens_are_null');
-    return AuthToken(accessToken: accessToken, refreshToken: refreshToken);
+    if (tokenResp != null) {
+      if (tokenResp.statusCode < 200 || tokenResp.statusCode >= 300) {
+        throw ErrorDescription('token_exchange_failed:${tokenResp.statusCode}');
+      }
+
+      final Map<String, dynamic> json = jsonDecode(tokenResp.body);
+      final accessToken = json['access_token'] as String?;
+      final refreshToken = json['refresh_token'] as String?;
+      if (accessToken == null || refreshToken == null) {
+        throw ErrorDescription('tokens_are_null');
+      }
+      return AuthToken(accessToken: accessToken, refreshToken: refreshToken);
+    } else {
+      return AuthToken(accessToken: "", refreshToken: "");
+    }
   }
 
   @override
@@ -98,8 +111,9 @@ class OAuthClient implements AuthClient {
       final Map<String, dynamic> json = jsonDecode(response.body);
       final accessToken = json['access_token'] as String?;
       final refreshToken = json['refresh_token'] as String?;
-      if (accessToken == null || refreshToken == null)
+      if (accessToken == null || refreshToken == null) {
         throw ErrorDescription('tokens_are_null');
+      }
       return AuthToken(accessToken: accessToken, refreshToken: refreshToken);
     } catch (e) {
       rethrow;

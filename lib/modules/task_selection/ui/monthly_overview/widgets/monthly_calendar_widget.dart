@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 import 'package:open_project_time_tracker/app/ui/widgets/configured_card.dart';
 import 'package:open_project_time_tracker/extensions/duration.dart';
+import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 
 // UI constants for calendar layout
 const double _kDayCellHeight = 48.0;

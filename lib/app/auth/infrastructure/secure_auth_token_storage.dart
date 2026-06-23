@@ -19,8 +19,23 @@ class SecureAuthTokenStorage implements AuthTokenStorage {
 
   @override
   Future<void> clear() async {
-    await _storage.write(key: accessTokenKey, value: null);
-    await _storage.write(key: refreshTokenKey, value: null);
+    try {
+      await _storage.write(key: accessTokenKey, value: null);
+      await _storage.write(key: refreshTokenKey, value: null);
+    } catch (e) {
+      // Handle decryption errors (e.g., BadPaddingException after OS/app updates)
+      // Clear corrupted data and return null to trigger re-authentication
+      print('Secure storage read failed (likely corrupted): $e');
+      try {
+        await _storage.deleteAll();
+      } catch (clearError) {
+        print('Failed to clear corrupted secure storage: $clearError');
+      }
+      finally {
+      }
+    }
+    finally {
+    }
   }
 
   @override
@@ -46,7 +61,20 @@ class SecureAuthTokenStorage implements AuthTokenStorage {
 
   @override
   Future<void> setToken(AuthToken token) async {
-    await _storage.write(key: accessTokenKey, value: token.accessToken);
-    await _storage.write(key: refreshTokenKey, value: token.refreshToken);
+    try {
+      await _storage.write(key: accessTokenKey, value: token.accessToken);
+      await _storage.write(key: refreshTokenKey, value: token.refreshToken);
+    } catch (e) {
+      // Handle decryption errors (e.g., BadPaddingException after OS/app updates)
+      // Clear corrupted data and return null to trigger re-authentication
+      print('Secure storage write failed (likely corrupted): $e');
+      try {
+        await clear();
+      } catch (clearError) {
+        print('Failed to clear corrupted secure storage: $clearError');
+      }
+      finally {}
+    }
+    finally {}
   }
 }

@@ -5,7 +5,7 @@ import 'package:open_project_time_tracker/app/auth/domain/auth_client.dart';
 import 'package:open_project_time_tracker/app/auth/domain/auth_token_storage.dart';
 
 class AuthInterceptor extends QueuedInterceptor {
-  final void Function()? onAuthetnicationFailed;
+  final void Function()? onAuthenticationFailed;
 
   final Dio dio;
   final AuthTokenStorage _tokenStorage;
@@ -15,7 +15,7 @@ class AuthInterceptor extends QueuedInterceptor {
     this.dio,
     this._tokenStorage,
     this._authClient,
-    this.onAuthetnicationFailed,
+    this.onAuthenticationFailed,
   );
 
   @override
@@ -39,12 +39,12 @@ class AuthInterceptor extends QueuedInterceptor {
       DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == HttpStatus.unauthorized ||
         err.response?.statusCode == HttpStatus.forbidden) {
-      print("Authetnication error - unauthorized");
+      print("Authentication error - unauthorized");
       try {
         final token = await _tokenStorage.getToken();
         if (token == null) {
           print("Trying to get existing token but none token found");
-          onAuthetnicationFailed?.call();
+          onAuthenticationFailed?.call();
           handler.next(err);
           return;
         }
@@ -107,7 +107,7 @@ class AuthInterceptor extends QueuedInterceptor {
       } catch (e) {
         print("refresh_token update failed: $e");
         handler.reject(err);
-        onAuthetnicationFailed?.call();
+        onAuthenticationFailed?.call();
       }
     } else {
       handler.next(err);

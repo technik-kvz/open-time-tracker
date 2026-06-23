@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import '../../../../../app/ui/widgets/configured_card.dart';
 import 'package:open_project_time_tracker/l10n/app_localizations.dart';
+
 import '/extensions/duration.dart';
+import '../../../../../app/ui/widgets/configured_card.dart';
 
 class TimeEntryListItem extends StatelessWidget {
   // Properties
@@ -11,7 +11,10 @@ class TimeEntryListItem extends StatelessWidget {
   final String workPackageSubject;
   final String projectTitle;
   final Duration hours;
+  final String startTime;
+  final String endTime;
   final String? comment;
+  final Map<String, String> customField;
   final Function()? action;
   final Future<bool> Function()? dismissAction;
 
@@ -20,10 +23,13 @@ class TimeEntryListItem extends StatelessWidget {
     super.key,
     required this.workPackageSubject,
     required this.projectTitle,
+    required this.startTime,
+    required this.endTime,
     required this.hours,
     required this.comment,
     this.action,
     this.dismissAction,
+    required this.customField,
   });
 
   Future<bool> _showCloseDialog(BuildContext context) async {
@@ -78,7 +84,7 @@ class TimeEntryListItem extends StatelessWidget {
 
   Widget _body(BuildContext context) {
     final trailing = hours.withLetters();
-    return GestureDetector(
+    GestureDetector gd = GestureDetector(
       onTap: action,
       child: ConfiguredCard(
         child: Padding(
@@ -112,5 +118,27 @@ class TimeEntryListItem extends StatelessWidget {
         ),
       ),
     );
+    if (customField.isNotEmpty) {
+      for (int i = 0; i < customField.length;i++) {
+        final iKey = customField.keys.elementAt(i);
+        if (customField[iKey] != null) {
+          final String cF = customField[iKey]!;
+          if (gd.child.runtimeType == ConfiguredCard) {
+            ConfiguredCard cGD = gd.child as ConfiguredCard;
+            if (cGD.child.runtimeType == Padding) {
+              Padding pcGD = cGD.child as Padding;
+              if (pcGD.child.runtimeType == Column) {
+                Column cocGD = pcGD.child as Column;
+                cocGD.children.add(SizedBox(height: cF.isNotEmpty ? 6 : 0));
+                if (cF.isNotEmpty) {
+                  cocGD.children.add(Text(cF));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return gd;
   }
 }

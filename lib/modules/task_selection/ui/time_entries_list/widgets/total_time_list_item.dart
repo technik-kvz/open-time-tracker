@@ -3,11 +3,11 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:open_project_time_tracker/app/ui/widgets/time_picker.dart';
+import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
-import '../../../../../app/ui/widgets/configured_card.dart';
 import '/extensions/duration.dart';
-import 'package:open_project_time_tracker/l10n/app_localizations.dart';
+import '../../../../../app/ui/widgets/configured_card.dart';
 
 class TotalTimeListItem extends StatelessWidget {
   final Duration workingHours;

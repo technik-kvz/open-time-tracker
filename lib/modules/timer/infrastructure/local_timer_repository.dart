@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:open_project_time_tracker/app/storage/timer_storage.dart';
 import 'package:open_project_time_tracker/modules/task_selection/domain/time_entries_repository.dart';
 import 'package:open_project_time_tracker/modules/timer/domain/timer_repository.dart';
@@ -26,16 +27,17 @@ class LocalTimerRepository implements TimerRepository {
   }
 
   @override
-  Future<bool> get hasStarted async {
-    final startTime = await _timerStorage.getStartTime();
-    return startTime != null;
-  }
-
-  @override
   Future<bool> get isActive async {
-    final startTime = await _timerStorage.getStartTime();
-    final stopTime = await _timerStorage.getStopTime();
-    return startTime != null && stopTime == null;
+    DateTime? startTime;
+    DateTime? endTime;
+    final TimeEntry? timeEntry = await _timerStorage.getTimeEntry();
+    if ((timeEntry != null) && (timeEntry.startTime != "null")) {
+      startTime = DateTime.tryParse(timeEntry.startTime);
+    }
+    if ((timeEntry != null) && (timeEntry.endTime != "null")) {
+      endTime = DateTime.tryParse(timeEntry.endTime);
+    }
+    return startTime != null && endTime == null;
   }
 
   @override
@@ -44,85 +46,109 @@ class LocalTimerRepository implements TimerRepository {
   }
 
   @override
-  Future<Duration> get timeSpent async {
-    final startTime = await _timerStorage.getStartTime();
-    if (startTime == null) {
-      return const Duration();
+  Future<DateTime> get startTime async {
+    final TimeEntry? timeEntry = await _timerStorage.getTimeEntry();
+    if ((timeEntry != null) && (timeEntry.startTime != "null")) {
+      final DateTime? startTime = DateTime.tryParse(timeEntry.startTime);
+      if (startTime != null) {
+        return startTime;
+      }
     }
-    final stopTime = await _timerStorage.getStopTime();
-    var greaterTime = stopTime ?? DateTime.now();
-    return greaterTime.difference(startTime);
+    return DateTime.now();
+  }
+  @override
+  Future<DateTime> get endTime async {
+    final TimeEntry? timeEntry = await _timerStorage.getTimeEntry();
+    if ((timeEntry != null) && (timeEntry.endTime != "null")) {
+      final DateTime? endTime = DateTime.tryParse(timeEntry.endTime);
+      if (endTime != null) {
+        return endTime;
+      }
+    }
+    return DateTime.now();
   }
 
   @override
   Future<void> setTimeEntry({required TimeEntry timeEntry}) async {
-    DateTime? startTime;
-    DateTime? stopTime;
-    if (timeEntry.hours.inSeconds > 0) {
-      stopTime = DateTime.now();
-      startTime = stopTime.add(-timeEntry.hours);
+    DateTime sT = DateTime.now();
+    if (timeEntry.startTime != "null") {
+      sT = DateTime.parse(timeEntry.startTime);
+    }
+    DateTime eT = sT.add(timeEntry.hours);
+    if (timeEntry.endTime != "null") {
+      eT = DateTime.parse(timeEntry.endTime);
     }
     await Future.wait([
       _timerStorage.setTimeEntry(timeEntry),
-      _timerStorage.setStartTime(startTime),
-      _timerStorage.setStopTime(stopTime),
     ]);
     _state.add(true);
   }
 
   @override
   Future<void> startTimer({required DateTime startTime}) async {
-    DateTime? startTime = await _timerStorage.getStartTime();
-    DateTime? stopTime = await _timerStorage.getStopTime();
-
-    if (startTime == null) {
-      stopTime = null;
+    DateTime? startTime;
+    DateTime? endTime;
+    final TimeEntry? timeEntry = await _timerStorage.getTimeEntry();
+    if (timeEntry != null) {
+      final Duration diff = timeEntry.hours;
       startTime = DateTime.now();
-    } else if (stopTime != null) {
-      final duration = DateTime.now().difference(stopTime);
-      startTime = startTime.add(duration);
-      stopTime = null;
+      timeEntry.startTime = startTime.toIso8601String();
+      endTime = startTime.add(diff);
+      timeEntry.endTime = "null";
+      timeEntry.hoursValue = diff;
     }
     await Future.wait([
-      _timerStorage.setStartTime(startTime),
-      _timerStorage.setStopTime(stopTime),
+      _timerStorage.setTimeEntry(timeEntry)
     ]);
   }
 
   @override
   Future<void> stopTimer({required DateTime stopTime}) async {
-    final startTime = await _timerStorage.getStartTime();
-    DateTime? stopTime = await _timerStorage.getStopTime();
-    final timeEntry = await _timerStorage.getTimeEntry();
-    if (stopTime == null) {
-      stopTime = DateTime.now();
-      await _timerStorage.setStopTime(stopTime);
+    DateTime? startTime;
+    DateTime? endTime;
+    final TimeEntry? timeEntry = await _timerStorage.getTimeEntry();
+    if (timeEntry != null) {
+      if (timeEntry.startTime == "null") {
+        final Duration diff = timeEntry.hours;
+        startTime = DateTime.now().add(-diff);
+        timeEntry.startTime = startTime.toIso8601String();
+      }
+      endTime = DateTime.now();
+      timeEntry.endTime = endTime.toIso8601String();
     }
-    if (startTime != null) {
-      timeEntry?.hours = stopTime.difference(startTime);
-      await _timerStorage.setTimeEntry(timeEntry);
-    }
+    await Future.wait([
+      _timerStorage.setTimeEntry(timeEntry)
+    ]);
   }
 
   @override
   Future<void> reset() async {
     await Future.wait([
       _timerStorage.setTimeEntry(null),
-      _timerStorage.setStartTime(null),
-      _timerStorage.setStopTime(null),
     ]);
     _state.add(false);
   }
 
   @override
   Future<void> add(Duration duration) async {
-    var startTime = await _timerStorage.getStartTime();
-    if (startTime == null) {
-      final date = DateTime.now();
-      _timerStorage.setStopTime(date);
-      startTime = date;
+    DateTime? startTime;
+    DateTime? endTime;
+    final TimeEntry? timeEntry = await _timerStorage.getTimeEntry();
+    if (timeEntry != null) {
+      final Duration diff = timeEntry.hours;
+      if (timeEntry.startTime == "null") {
+        startTime = DateTime.now().add(-diff);
+        timeEntry.startTime = startTime.toIso8601String();
+      }
+      if (timeEntry.endTime == "null") {
+        startTime = DateTime.parse(timeEntry.startTime);
+        timeEntry.endTime = startTime.add(diff).toIso8601String();
+      }
+      endTime = DateTime.parse(timeEntry.endTime).add(duration);
+      timeEntry.endTime = endTime.toIso8601String();
     }
-    final newStartTime = startTime.add(-duration);
-    await _timerStorage.setStartTime(newStartTime);
+    await Future.wait([
+      _timerStorage.setTimeEntry(timeEntry)
+    ]);
   }
 }

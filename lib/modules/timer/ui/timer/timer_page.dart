@@ -7,12 +7,10 @@ import 'package:open_project_time_tracker/app/app_router.dart';
 import 'package:open_project_time_tracker/app/live_activity/infrastructure/notification_permission_helper.dart';
 import 'package:open_project_time_tracker/app/ui/bloc/bloc_page.dart';
 import 'package:open_project_time_tracker/app/ui/widgets/filled_button.dart';
-import 'package:open_project_time_tracker/extensions/duration.dart';
+import 'package:open_project_time_tracker/l10n/app_localizations.dart';
+//import 'package:open_project_time_tracker/extensions/duration.dart';
 import 'package:open_project_time_tracker/modules/timer/ui/timer/timer_bloc.dart';
 
-import 'package:open_project_time_tracker/l10n/app_localizations.dart';
-
-import '../../../../extensions/duration.dart';
 import '../../../../app/ui/widgets/configured_outlined_button.dart';
 
 // ignore: must_be_immutable
@@ -99,7 +97,7 @@ class TimerPage extends EffectBlocPage<TimerBloc, TimerState, TimerEffect> {
     var leftButtonTitle = AppLocalizations.of(context).timer_start;
     if (state.isActive) {
       leftButtonTitle = AppLocalizations.of(context).timer_pause;
-    } else if (state.hasStarted) {
+    } else {
       leftButtonTitle = AppLocalizations.of(context).timer_resume;
     }
 
@@ -129,9 +127,18 @@ class TimerPage extends EffectBlocPage<TimerBloc, TimerState, TimerEffect> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Spacer(flex: 11),
+            const Spacer(flex: 5),
             Text(
-              state.timeSpent.longWatch(),
+              state.startTime.toLocal().toString(),
+              style: const TextStyle(
+                fontSize: 60,
+                fontWeight: FontWeight.w300,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+            const Spacer(flex: 5),
+            Text(
+              state.endTime.toLocal().toString(),
               style: const TextStyle(
                 fontSize: 60,
                 fontWeight: FontWeight.w300,
@@ -204,7 +211,7 @@ class TimerPage extends EffectBlocPage<TimerBloc, TimerState, TimerEffect> {
                 SizedBox(
                   width: buttonWidth,
                   child: FilledButton(
-                    onPressed: (state.hasStarted
+                    onPressed: (true
                         ? context.read<TimerBloc>().finish
                         : null),
                     text: AppLocalizations.of(context).timer_finish,

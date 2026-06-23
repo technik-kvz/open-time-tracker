@@ -15,7 +15,7 @@ abstract class WorkPackagesApi {
 
   @GET('/projects/{projectId}/work_packages')
   Future<WorkPackagesListResponse> workPackagesOfProject({
-    @Path() required projectId,
+    @Path() required String? projectId,
     @Query('filters') String? filters,
     @Query('pageSize') int? pageSize,
   });
@@ -49,25 +49,32 @@ class WorkPackageResponse {
   late WorkPackageAssigneeResponse assignee;
 
   WorkPackageResponse.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    try {
+      id = json['id'];
 
-    subject = json["subject"];
+      subject = json["subject"];
 
-    final links = json["_links"];
-    final project = links["project"];
-    projectTitle = project["title"];
-    projectHref = project["href"];
+      final links = json["_links"];
+      final project = links["project"];
+      projectTitle = project["title"];
+      projectHref = project["href"];
 
-    final self = links["self"];
-    href = self["href"];
+      final self = links["self"];
+      href = self["href"];
 
-    final priorityJson = links["priority"];
-    priority = priorityJson['title'];
+      final priorityJson = links["priority"];
+      priority = priorityJson['title'];
 
-    final statusJson = links["status"];
-    status = statusJson['title'];
+      final statusJson = links["status"];
+      status = statusJson['title'];
 
-    assignee = WorkPackageAssigneeResponse.fromJson(links['assignee']);
+      assignee = WorkPackageAssigneeResponse.fromJson(links['assignee']);
+    }
+    on Exception catch (e) {
+      print(e.toString());
+    }
+    finally {
+    }
   }
 }
 
@@ -75,12 +82,19 @@ class WorkPackagesListResponse {
   late List<WorkPackageResponse> workPackages;
 
   WorkPackagesListResponse.fromJson(Map<String, dynamic> json) {
-    List<WorkPackageResponse> items = [];
-    final embedded = json['_embedded'];
-    final elements = embedded['elements'] as List<dynamic>;
-    for (var element in elements) {
-      items.add(WorkPackageResponse.fromJson(element));
+    try {
+      List<WorkPackageResponse> items = [];
+      final embedded = json['_embedded'];
+      final elements = embedded['elements'] as List<dynamic>;
+      for (var element in elements) {
+        items.add(WorkPackageResponse.fromJson(element));
+      }
+      workPackages = items;
     }
-    workPackages = items;
+    on Exception catch (e) {
+      print(e.toString());
+    }
+    finally {
+    }
   }
 }

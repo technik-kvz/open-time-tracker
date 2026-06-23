@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:open_project_time_tracker/modules/authorization/domain/user_data_repository.dart';
-import 'package:open_project_time_tracker/modules/task_selection/domain/time_entries_repository.dart';
-import 'package:open_project_time_tracker/modules/task_selection/domain/models/weekday_hours.dart';
 import 'package:open_project_time_tracker/modules/task_selection/domain/models/project_hours.dart';
+import 'package:open_project_time_tracker/modules/task_selection/domain/models/weekday_hours.dart';
 import 'package:open_project_time_tracker/modules/task_selection/domain/services/time_aggregation_service.dart';
+import 'package:open_project_time_tracker/modules/task_selection/domain/time_entries_repository.dart';
 
 part 'monthly_overview_bloc.freezed.dart';
 
