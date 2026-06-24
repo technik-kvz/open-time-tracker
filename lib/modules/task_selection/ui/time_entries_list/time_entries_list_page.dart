@@ -8,6 +8,7 @@ import 'package:open_project_time_tracker/modules/task_selection/ui/time_entries
 import 'package:open_project_time_tracker/modules/task_selection/ui/time_entries_list/widgets/date_navigator.dart';
 import 'package:open_project_time_tracker/modules/task_selection/ui/time_entries_list/widgets/total_time_list_item.dart';
 
+import '../../domain/time_entries_repository.dart';
 import 'widgets/time_entry_list_item.dart';
 
 class TimeEntriesListPage
@@ -226,12 +227,12 @@ class _ItemPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const TimeEntryListItem(
+    return TimeEntryListItem(
       workPackageSubject: '',
       projectTitle: 'timeEntry.projectTitle',
-      startTime: 'null',
-      endTime: 'null',
-      hours: Duration(),
+      startTime: DateTime.now().toLocal().toIso8601String(),
+      endTime: DateTime.now().toLocal().toIso8601String(),
+      hours: Duration(seconds: 0),
       comment: '',
       customField: {},
     );

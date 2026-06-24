@@ -2,7 +2,6 @@ import 'package:open_project_time_tracker/modules/task_selection/domain/time_ent
 
 abstract class TimerRepository {
   Future<bool> get isSet;
-  Future<bool> get isActive;
 
   Future<TimeEntry?> get timeEntry;
   Future<DateTime> get startTime;
@@ -15,6 +14,8 @@ abstract class TimerRepository {
   Future<void> startTimer({required DateTime startTime});
 
   Future<void> stopTimer({required DateTime stopTime});
+
+  Future<void> updateTimer({required DateTime startTime, required DateTime stopTime});
 
   Future<void> reset();
 

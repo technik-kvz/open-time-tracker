@@ -323,6 +323,7 @@ class ApiTimeEntriesRepository implements TimeEntriesRepository {
     }
     finally {
     }
+    items.sort(compareTimeEntries);
     return items;
   }
 

@@ -86,12 +86,10 @@ class LocalTimerRepository implements TimerRepository {
 
   @override
   Future<void> startTimer({required DateTime startTime}) async {
-    DateTime? startTime;
     DateTime? endTime;
     final TimeEntry? timeEntry = await _timerStorage.getTimeEntry();
     if (timeEntry != null) {
       final Duration diff = timeEntry.hours;
-      startTime = DateTime.now();
       timeEntry.startTime = startTime.toIso8601String();
       endTime = startTime.add(diff);
       timeEntry.endTime = "null";
@@ -105,7 +103,6 @@ class LocalTimerRepository implements TimerRepository {
   @override
   Future<void> stopTimer({required DateTime stopTime}) async {
     DateTime? startTime;
-    DateTime? endTime;
     final TimeEntry? timeEntry = await _timerStorage.getTimeEntry();
     if (timeEntry != null) {
       if (timeEntry.startTime == "null") {
@@ -113,8 +110,19 @@ class LocalTimerRepository implements TimerRepository {
         startTime = DateTime.now().add(-diff);
         timeEntry.startTime = startTime.toIso8601String();
       }
-      endTime = DateTime.now();
-      timeEntry.endTime = endTime.toIso8601String();
+      timeEntry.endTime = stopTime.toIso8601String();
+    }
+    await Future.wait([
+      _timerStorage.setTimeEntry(timeEntry)
+    ]);
+  }
+
+  @override
+  Future<void> updateTimer({required DateTime startTime, required DateTime stopTime}) async {
+    final TimeEntry? timeEntry = await _timerStorage.getTimeEntry();
+    if (timeEntry != null) {
+      timeEntry.startTime = startTime.toIso8601String();
+      timeEntry.endTime = stopTime.toIso8601String();
     }
     await Future.wait([
       _timerStorage.setTimeEntry(timeEntry)

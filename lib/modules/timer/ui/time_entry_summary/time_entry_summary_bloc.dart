@@ -13,12 +13,8 @@ class TimeEntrySummaryState with _$TimeEntrySummaryState {
   const factory TimeEntrySummaryState.loading() = _Loading;
   const factory TimeEntrySummaryState.idle({
     required String title,
-    required String projectTitle,
-    required Duration timeSpent,
-    required String? comment,
+    required TimeEntry timeEntry,
     required List<String>? commentSuggestions,
-    required Map<String, String> customFields,
-    required Map<String, String> customFieldNames,
   }) = _Idle;
 }
 
@@ -36,7 +32,7 @@ class TimeEntrySummaryBloc
   final TimerRepository _timerRepository;
   final TimerService _timerService;
 
-  late TimeEntry timeEntry;
+  TimeEntry? timeEntry;
   List<String>? _commentSuggestions;
   bool _disposed = false;
 
@@ -52,26 +48,22 @@ class TimeEntrySummaryBloc
     if (!_disposed) {
       emit(
         TimeEntrySummaryState.idle(
-          title: timeEntry.workPackageSubject,
-          projectTitle: timeEntry.projectTitle,
-          timeSpent: timeEntry.hours,
-          comment: timeEntry.comment,
+          title: timeEntry!.workPackageSubject,
+          timeEntry: timeEntry!,
           commentSuggestions: _commentSuggestions,
-          customFields: timeEntry.customField,
-          customFieldNames: timeEntry.customFieldName,
         ),
       );
     }
   }
 
   Future<void> _init() async {
-    dynamic _timeEntry = await _timerRepository.timeEntry;
-    final workPackageIdString = _timeEntry.workPackageHref.split('/').last;
-    final workPackageId = int.tryParse(workPackageIdString);
-    final timeEntries = await _timeEntriesRepository.list(
-      workPackageId: workPackageId,
-      pageSize: 100,
-    );
+    TimeEntry? _timeEntry = await _timerRepository.timeEntry;
+    int? workPackageId;
+    if (_timeEntry != null) {
+      final workPackageIdString = _timeEntry.workPackageHref.split('/').last;
+      workPackageId = int.tryParse(workPackageIdString);
+    }
+    final timeEntries = await _timeEntriesRepository.list(workPackageId: workPackageId, pageSize: 100,);
     _timeEntry = await _timerRepository.timeEntry;
     
     if (_timeEntry != null) {
@@ -99,22 +91,38 @@ class TimeEntrySummaryBloc
   }
 
   Future<void> updateTimeSpent(Duration timeSpent) async {
-    timeEntry.hoursValue = timeSpent;
-    if (timeEntry.startTime != "null") {
-      timeEntry.endTime = DateTime.parse(timeEntry.startTime).add(timeSpent).toIso8601String();
+    timeEntry!.hoursValue = timeSpent;
+    if (timeEntry!.startTime != "null") {
+      timeEntry!.endTime = DateTime.parse(timeEntry!.startTime).add(timeSpent).toIso8601String();
     }
     _emitIdleState();
   }
 
   Future<void> updateComment(String comment) async {
-    timeEntry.comment = comment;
+    timeEntry!.comment = comment;
   }
 
   Future<void> updateCustomField(String customField, String iKey) async {
-    timeEntry.customField[iKey] = customField;
+    try {
+      Map<String, String> cF = Map<String, String>.from(timeEntry!.customField);
+      cF[iKey] = customField;
+      timeEntry!.customField = cF;
+    }
+    catch(e) {
+      e.toString();
+    }
+    finally {}
   }
   Future<void> updateCustomFieldName(String customFieldName, String iKey) async {
-    timeEntry.customFieldName[iKey] = customFieldName;
+    try {
+        Map<String, String> cFN = Map<String, String>.from(timeEntry!.customFieldName);
+        cFN[iKey] = customFieldName;
+        timeEntry!.customFieldName = cFN;
+    }
+    catch(e) {
+      e.toString();
+    }
+    finally {}
   }
 
   Future<void> submit() async {

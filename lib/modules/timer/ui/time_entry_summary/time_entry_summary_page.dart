@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide FilledButton;
+import 'package:intl/intl.dart';
 import 'package:open_project_time_tracker/app/app_router.dart';
 import 'package:open_project_time_tracker/app/ui/bloc/bloc_page.dart';
 import 'package:open_project_time_tracker/app/ui/widgets/activity_indicator.dart';
@@ -8,6 +9,8 @@ import 'package:open_project_time_tracker/app/ui/widgets/time_picker.dart';
 import 'package:open_project_time_tracker/extensions/duration.dart';
 import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 import 'package:open_project_time_tracker/modules/timer/ui/time_entry_summary/time_entry_summary_bloc.dart';
+
+import '../../../task_selection/domain/time_entries_repository.dart';
 
 
 // ignore: must_be_immutable
@@ -23,72 +26,31 @@ class TimeEntrySummaryPage
   final _commentFieldController = TextEditingController();
   late final List<TextEditingController> _customFieldsFieldController = [];
 
-  DateTime _startTime = DateTime.now();
-  DateTime _endTime = DateTime.now();
-  Map<String, String> _customFields = const {};
-  Map<String, String> _customFieldNames = const {};
-
-  DateTime get startTime {
-    return _startTime;
-  }
-  set startTime(DateTime t) {
-    final Duration d = -_endTime.difference(_startTime);
-    _startTime = t;
-    _endTime = t.add(d);
-  }
-  DateTime get endTime {
-    if (_endTime.millisecondsSinceEpoch < _startTime.millisecondsSinceEpoch) {
-      final DateTime tmp = _endTime;
-      _endTime = _startTime;
-      _startTime = tmp;
-    }
-    return _endTime;
-  }
-  set endTime(DateTime t) {
-    _endTime = t;
-  }
-  Map<String, String> get customFields {
-    return _customFields;
-  }
-  set customFields(Map<String, String> l) {
-    _customFields = l;
-  }
-  Map<String, String> get customFieldNames {
-    return _customFieldNames;
-  }
-  set customFieldNames(Map<String, String> l) {
-    _customFieldNames = l;
-  }
-
-  Duration get timeSpent {
-    if (_endTime.millisecondsSinceEpoch < _startTime.millisecondsSinceEpoch) {
-      final DateTime tmp = _endTime;
-      _endTime = _startTime;
-      _startTime = tmp;
-    }
-    return -_endTime.difference(_startTime);
-  }
-  set timeSpent(Duration d) {
-    _endTime = _startTime.add(d);
-  }
+  TimeEntry? _timeEntry;
 
   TimeEntrySummaryPage({super.key});
 
   void _showTimePicker(BuildContext context) {
-    if (timeSpent.inSeconds <= 0) {
-      final hours = timeSpent.inHours;
-      final minutes = timeSpent.inMinutes.remainder(60);
-      showCupertinoModalPopup(
-        context: context,
-        builder: ((_) => TimePicker(
-          hours: hours,
-          minutes: minutes,
-          onTimeChanged: (value) {
-            final duration = Duration(hours: value.hour, minutes: value.minute);
-            context.read<TimeEntrySummaryBloc>().updateTimeSpent(duration);
-          },
-        )),
-      );
+    if (_timeEntry != null) {
+      final Duration spendTime = _timeEntry!.hours;
+      if (spendTime.inSeconds <= 0) {
+        final hours = spendTime.inHours;
+        final minutes = spendTime.inMinutes.remainder(60);
+        showCupertinoModalPopup(
+          context: context,
+          builder: ((_) =>
+              TimePicker(
+                hours: hours,
+                minutes: minutes,
+                onTimeChanged: (value) {
+                  final duration = Duration(
+                      hours: value.hour, minutes: value.minute);
+                  context.read<TimeEntrySummaryBloc>().updateTimeSpent(
+                      duration);
+                },
+              )),
+        );
+      }
     }
   }
 
@@ -132,28 +94,26 @@ class TimeEntrySummaryPage
   void onStateChange(BuildContext context, TimeEntrySummaryState state) {
     super.onStateChange(context, state);
     state.whenOrNull(
-      idle: (title, projectTitle, timeSpent, comment, commentSuggestions, iCustomFields, iCustomFieldNames) {
-        this.timeSpent = timeSpent;
-        if ((iCustomFields != null) && iCustomFields.isNotEmpty) {
-          this.customFields = iCustomFields;
-          for (int i=0; i<iCustomFields.length; i++) {
+      idle: (title, timeEntry, commentSuggestions) {
+        this._timeEntry = timeEntry;
+        if ((timeEntry.customField != null) && timeEntry.customField.isNotEmpty) {
+          for (int i=0; i<timeEntry.customField.length; i++) {
             while (_customFieldsFieldController.length <= i) {
               _customFieldsFieldController.add(TextEditingController());
             }
-            final String iKey = iCustomFields.keys.elementAt(i);
-            _customFieldsFieldController[i].text = iCustomFields[iKey] ?? '';
+            final String iKey = timeEntry.customField.keys.elementAt(i);
+            _customFieldsFieldController[i].text = timeEntry.customField[iKey] ?? '';
           }
         }
-        if ((iCustomFieldNames != null) && iCustomFieldNames.isNotEmpty) {
-          this.customFieldNames = iCustomFieldNames;
-          for (int i=0; i<iCustomFieldNames.length; i++) {
+        if ((timeEntry.customFieldName != null) && timeEntry.customFieldName.isNotEmpty) {
+          for (int i=0; i<timeEntry.customFieldName.length; i++) {
             while (_customFieldsFieldController.length <= i) {
               _customFieldsFieldController.add(TextEditingController());
             }
           }
         }
         // TODO: fix comment lose after hot reload
-        _commentFieldController.text = comment ?? '';
+        _commentFieldController.text = timeEntry.comment ?? '';
       },
     );
   }
@@ -163,46 +123,46 @@ class TimeEntrySummaryPage
     final deviceSize = MediaQuery.of(context).size;
     final buttonWidth = deviceSize.width * 0.7;
 
-    if (customFields.isNotEmpty) {
-      for (int i = 0; i < customFields.length; i++) {
-        while (_customFieldsFieldController.length <= i) {
-          _customFieldsFieldController.add(TextEditingController());
+    if (_timeEntry != null) {
+      if (_timeEntry!.customField.isNotEmpty) {
+        for (int i = 0; i < _timeEntry!.customField.length; i++) {
+          while (_customFieldsFieldController.length <= i) {
+            _customFieldsFieldController.add(TextEditingController());
+          }
         }
       }
-    }
-    if (customFieldNames.isNotEmpty) {
-      for (int i = 0; i < customFieldNames.length; i++) {
-        while (_customFieldsFieldController.length <= i) {
-          _customFieldsFieldController.add(TextEditingController());
+      if (_timeEntry!.customFieldName.isNotEmpty) {
+        for (int i = 0; i < _timeEntry!.customFieldName.length; i++) {
+          while (_customFieldsFieldController.length <= i) {
+            _customFieldsFieldController.add(TextEditingController());
+          }
         }
       }
     }
 
     final Widget body = state.when(
       loading: () => const Center(child: ActivityIndicator()),
-      idle: (title, projectTitle, timeSpent, comment, commentSuggestions, iCustomFields, iCustomFieldNames) {
-        if (iCustomFields != null) {
-          if (iCustomFields.isNotEmpty) {
-            this._customFields = iCustomFields;
-            for (int i = 0; i < customFields.length; i++) {
+      idle: (title, timeEntry, commentSuggestions) {
+        this._timeEntry = timeEntry;
+        if (timeEntry.customField != null) {
+          if (timeEntry.customField.isNotEmpty) {
+            for (int i = 0; i < timeEntry.customField.length; i++) {
               while (_customFieldsFieldController.length <= i) {
                 _customFieldsFieldController.add(TextEditingController());
               }
             }
           }
         }
-        if (iCustomFieldNames != null) {
-          if (iCustomFieldNames.isNotEmpty) {
-            this._customFieldNames = iCustomFieldNames;
-            for (int i = 0; i < _customFieldNames.length; i++) {
+        if (timeEntry.customFieldName != null) {
+          if (timeEntry.customFieldName.isNotEmpty) {
+            for (int i = 0; i < timeEntry.customFieldName.length; i++) {
               while (_customFieldsFieldController.length <= i) {
                 _customFieldsFieldController.add(TextEditingController());
               }
             }
           }
         }
-        this.timeSpent = timeSpent;
-        _timeFieldController.text = timeSpent.shortWatch();
+        _timeFieldController.text = timeEntry.hours.shortWatch();
         Padding retP = Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -222,7 +182,25 @@ class TimeEntrySummaryPage
                       enabled: false,
                     ),
                     TextFormField(
-                      initialValue: projectTitle,
+                      initialValue: timeEntry.projectTitle,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(
+                          context,
+                        ).time_entry_summary_project,
+                      ),
+                      enabled: false,
+                    ),
+                    TextFormField(
+                      initialValue: DateFormat("yyyy-MM-dd hh:mm").format(DateTime.parse(timeEntry.startTime).toLocal()),
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(
+                          context,
+                        ).time_entry_summary_project,
+                      ),
+                      enabled: false,
+                    ),
+                    TextFormField(
+                      initialValue: DateFormat("yyyy-MM-dd hh:mm").format(DateTime.parse(timeEntry.endTime).toLocal()),
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(
                           context,
@@ -284,13 +262,17 @@ class TimeEntrySummaryPage
             ],
           ),
         );
-        if (_customFields != null) {
-          if (_customFields.isNotEmpty) {
-            for (int i = 0; i < _customFields.length; i++) {
+        if (timeEntry.customField != null) {
+          if (timeEntry.customField.isNotEmpty) {
+            for (int i = 0; i < timeEntry.customField.length; i++) {
               while (_customFieldsFieldController.length <= i) {
                 _customFieldsFieldController.add(TextEditingController());
               }
-              final String iKey = _customFields.keys.elementAt(i);
+              final String iKey = timeEntry.customField.keys.elementAt(i);
+              if (timeEntry.customFieldName.containsKey(iKey)) {
+              } else {
+                timeEntry.customFieldName[iKey] = "customField$iKey";
+              }
               if (retP.child.runtimeType == Column) {
                 Column colRetP = retP.child as Column;
                 if (colRetP.children.isNotEmpty &&
@@ -302,7 +284,7 @@ class TimeEntrySummaryPage
                       textCapitalization: TextCapitalization.sentences,
                       controller: _customFieldsFieldController[i],
                       decoration: InputDecoration(
-                        labelText: _customFieldNames[iKey],
+                        labelText: timeEntry.customFieldName[iKey],
                       ),
                       readOnly: false,
                       onChanged: (_) =>

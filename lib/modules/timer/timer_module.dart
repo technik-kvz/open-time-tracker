@@ -33,11 +33,9 @@ abstract class TimerModule {
   @injectable
   TimerBloc timerBloc(
     TimerRepository timerRepository,
-    LiveActivityManager liveActivityManager,
   ) =>
       TimerBloc(
         timerRepository,
-        liveActivityManager,
       );
 
   @injectable

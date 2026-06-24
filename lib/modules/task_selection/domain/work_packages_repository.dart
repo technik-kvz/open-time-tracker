@@ -1,3 +1,7 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'work_packages_repository.g.dart';
+
 abstract class WorkPackagesRepository {
   Future<List<WorkPackage>> list({
     String? projectId,
@@ -12,6 +16,7 @@ enum WorkPackageAssigneeType {
   group,
 }
 
+@JsonSerializable()
 class WorkPackageAssignee {
   final WorkPackageAssigneeType type;
   final String title;
@@ -20,8 +25,15 @@ class WorkPackageAssignee {
     required this.type,
     required this.title,
   });
+
+  /// Connect the generated [_$WorkPackageAssigneeFromJson] function to the `fromJson` factory.
+  factory WorkPackageAssignee.fromJson(Map<String, dynamic> json) => _$WorkPackageAssigneeFromJson(json);
+
+  /// Connect the generated [_$WorkPackageAssigneeToJson] function to the `toJson` method.
+  Map<String, dynamic> toJson() => _$WorkPackageAssigneeToJson(this);
 }
 
+@JsonSerializable()
 class WorkPackage {
   int id;
   String subject;
@@ -42,4 +54,10 @@ class WorkPackage {
     required this.status,
     required this.assignee,
   });
+
+  /// Connect the generated [_$WorkPackageFromJson] function to the `fromJson` factory.
+  factory WorkPackage.fromJson(Map<String, dynamic> json) => _$WorkPackageFromJson(json);
+
+  /// Connect the generated [_$WorkPackageToJson] function to the `toJson` method.
+  Map<String, dynamic> toJson() => _$WorkPackageToJson(this);
 }

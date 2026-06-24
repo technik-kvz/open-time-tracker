@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 
 import '/extensions/duration.dart';
@@ -98,7 +99,7 @@ class TimeEntryListItem extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      workPackageSubject,
+                      "${DateFormat("yyyy-MM-dd hh:mm").format(DateTime.parse(startTime))} - ${DateFormat("hh:mm").format(DateTime.parse(endTime))}",
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
@@ -106,11 +107,12 @@ class TimeEntryListItem extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(trailing, style: const TextStyle(color: Colors.black54)),
+                  Text(trailing),
                 ],
               ),
               const SizedBox(height: 4),
-              Text(projectTitle, style: const TextStyle(color: Colors.grey)),
+              Text(projectTitle),
+              Text(workPackageSubject),
               SizedBox(height: comment != null && comment!.isNotEmpty ? 6 : 0),
               if (comment != null && comment!.isNotEmpty) Text(comment!),
             ],

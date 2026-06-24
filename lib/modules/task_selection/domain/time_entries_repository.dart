@@ -221,3 +221,29 @@ class TimeEntry {
     return ret;
   }
 }
+
+int compareTimeEntries(TimeEntry a, TimeEntry b) {
+  final DateTime? aD = DateTime.tryParse(a.startTime);
+  final DateTime? bD = DateTime.tryParse(b.startTime);
+  if (aD != null) {
+    if (bD != null) {
+      return aD.compareTo(bD);
+    }
+    else {
+      return -1;
+    }
+  }
+  else if (a.id != null) {
+    if (b.id != null) {
+      if (a.id! < b.id!) {
+        return -1;
+      } else if (a.id! == b.id!) {
+        return 0;
+      }
+      else {
+        return 1;
+      }
+    }
+  }
+  return a.spentOn.compareTo(b.spentOn);
+}
