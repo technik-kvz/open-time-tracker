@@ -77,7 +77,6 @@ migrate_working_dir/
 
 # Web related
 
-**/web/**/lib/generated_plugin_registrant.dart
 
 # Service account files
 svc-keyfile.json
@@ -115,3 +114,4 @@ android/fastlane/metadata/
 
 # Semantic release / Node.js
 node_modules/
+/pubspec.lock
