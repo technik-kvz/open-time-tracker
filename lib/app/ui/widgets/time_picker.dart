@@ -5,17 +5,18 @@ class TimePicker extends StatelessWidget {
   final int hours;
   final int minutes;
   final Function(DateTime) onTimeChanged;
+  final int minuteInterval;
 
   const TimePicker({
     required this.hours,
     required this.minutes,
     required this.onTimeChanged,
+    this.minuteInterval = 5,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    const minuteInterval = 5;
     final roundedMinutes = minutes - minutes % minuteInterval;
     return Container(
       height: 300,

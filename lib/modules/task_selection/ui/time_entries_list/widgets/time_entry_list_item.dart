@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:open_project_time_tracker/l10n/app_localizations.dart';
 
+import '../../../domain/time_entries_repository.dart';
 import '/extensions/duration.dart';
 import '../../../../../app/ui/widgets/configured_card.dart';
 
@@ -133,7 +134,31 @@ class TimeEntryListItem extends StatelessWidget {
                 Column cocGD = pcGD.child as Column;
                 cocGD.children.add(SizedBox(height: cF.isNotEmpty ? 6 : 0));
                 if (cF.isNotEmpty) {
-                  cocGD.children.add(Text(cF));
+                  if (TimeEntry.bekannteFelder.containsKey(iKey)) {
+                    switch (TimeEntry.bekannteFelder[iKey] as BekannteFelder) {
+                      case BekannteFelder.anteilTechnik:
+                        final double mF = hours.inMinutes / 60.0;
+                        final double f = double.tryParse(cF) ?? mF;
+                        final int h = f.floor();
+                        final double dm = (f - h.toDouble()) * 60.0;
+                        final int m = dm.round();
+                        final Duration d = Duration(hours:h, minutes: m);
+                        cocGD.children.add(Text(d.shortWatch()));
+                        break;
+
+                      case BekannteFelder.anteilPause:
+                        final double mF = hours.inMinutes / 60.0;
+                        final double f = double.tryParse(cF) ?? 0.0;
+                        final int h = f.floor();
+                        final double dm = (f - h.toDouble()) * 60.0;
+                        final int m = dm.round();
+                        final Duration d = Duration(hours:h, minutes: m);
+                        cocGD.children.add(Text(d.shortWatch()));
+                        break;
+                    }
+                  } else {
+                    cocGD.children.add(Text(cF));
+                  }
                 }
               }
             }

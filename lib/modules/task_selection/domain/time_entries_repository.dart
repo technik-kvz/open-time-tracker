@@ -19,9 +19,15 @@ abstract class TimeEntriesRepository {
   Future<void> delete({required int id});
 }
 
+enum BekannteFelder {
+  anteilTechnik,
+  anteilPause
+}
+
 class TimeEntry {
-  static const Map<String, String> defaultCustomFields = {"1": "100", "6": "0.0"};
-  static const Map<String, String> defaultCustomFieldNames = {"1": "Anteil Technik in %", "6": "inkl. Pause"};
+  static const Map<String, String> defaultCustomFields = {"1": "", "6": "0.0"};
+  static const Map<String, String> defaultCustomFieldNames = {"1": "Anteil Technik", "6": "inkl. Pause"};
+  static const Map<String, BekannteFelder> bekannteFelder = { "1": BekannteFelder.anteilTechnik,  "6": BekannteFelder.anteilPause};
 
   late int? id;
   late String workPackageSubject;

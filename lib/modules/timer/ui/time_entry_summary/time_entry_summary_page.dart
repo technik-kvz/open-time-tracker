@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide FilledButton;
 import 'package:intl/intl.dart';
@@ -54,6 +56,62 @@ class TimeEntrySummaryPage
     }
   }
 
+  void _updateCustomFieldController(BuildContext context, String cF, String iKey) {
+    if ((_timeEntry != null) && _timeEntry!.customField.containsKey(iKey) && TimeEntry.bekannteFelder.containsKey(iKey)) {
+    } else {
+      context.read<TimeEntrySummaryBloc>().updateCustomField(cF, iKey);
+    }
+  }
+
+  void _showTimePickerCustomField(BuildContext context, int i, String iKey) {
+    try {
+      if ((_timeEntry != null) && _timeEntry!.customField.containsKey(iKey) && TimeEntry.bekannteFelder.containsKey(iKey)) {
+        final String cF = _timeEntry!.customField[iKey] as String;
+        double altF = double.tryParse(TimeEntry.defaultCustomFields[iKey]!) ?? 0.0;
+        double mF = double.infinity;
+        switch (TimeEntry.bekannteFelder[iKey] as BekannteFelder) {
+          case BekannteFelder.anteilTechnik:
+            altF = _timeEntry!.hours.inMinutes / 60.0;
+            mF = _timeEntry!.hours.inMinutes / 60.0;
+            break;
+          case BekannteFelder.anteilPause :
+            mF = _timeEntry!.hours.inMinutes / 60.0;
+            break;
+        }
+        double f = double.tryParse(cF) ?? altF;
+        final int h = f.floor();
+        final double dm = (f - h.toDouble()) * 60.0;
+        final int m = dm.round();
+        final Duration spendTime = Duration(hours: h, minutes: m);
+        final hours = spendTime.inHours;
+        final minutes = spendTime.inMinutes.remainder(60);
+        showCupertinoModalPopup(
+          context: context,
+          builder: ((_) =>
+            TimePicker(
+              hours: hours,
+              minutes: minutes,
+              minuteInterval : 1,
+              onTimeChanged: (value) {
+                final Duration newDuration = Duration(hours: value.hour, minutes: value.minute);
+                final double doubleDuration = (newDuration.inMinutes / 60.0);
+                final double finalDuration = (doubleDuration >= 0.0) && (doubleDuration <= mF) ? doubleDuration : mF;
+                context.read<TimeEntrySummaryBloc>().updateCustomField(finalDuration.toStringAsFixed(3), iKey);
+                //print(jsonEncode(_timeEntry).toString());
+                final Duration correctDuration = Duration(minutes: (finalDuration * 60.0).round());
+                _customFieldsFieldController[i].text = correctDuration.shortWatch();
+              },
+            )
+          ),
+        );
+      }
+    } catch(e) {
+      print(e.toString());
+    }
+    finally {
+    }
+  }
+
   Future<void> _submit(BuildContext context) async {
     _form.currentState?.save();
     context.read<TimeEntrySummaryBloc>().submit();
@@ -102,7 +160,26 @@ class TimeEntrySummaryPage
               _customFieldsFieldController.add(TextEditingController());
             }
             final String iKey = timeEntry.customField.keys.elementAt(i);
-            _customFieldsFieldController[i].text = timeEntry.customField[iKey] ?? '';
+            if (TimeEntry.bekannteFelder.containsKey(iKey)) {
+              switch (TimeEntry.bekannteFelder[iKey] as BekannteFelder) {
+                case BekannteFelder.anteilTechnik:
+                  final String cFT = timeEntry.customField[iKey] ?? '';
+                  final double f = double.tryParse(cFT) ?? -1.0;
+                  final double ref = timeEntry.hours.inMinutes / 60.0;
+                  final String cF = (cFT == '') ? timeEntry.hours.shortWatch() : (f >= 0.0) && (f < ref) ? Duration(minutes: (f * 60.0).round()).shortWatch() : timeEntry.hours.shortWatch();
+                  _customFieldsFieldController[i].text = cF;
+                  break;
+                case BekannteFelder.anteilPause:
+                  final String cFT = timeEntry.customField[iKey] ?? '';
+                  final double f = double.tryParse(cFT) ?? -1.0;
+                  final double ref = timeEntry.hours.inMinutes / 60.0;
+                  final String cF = (cFT == '') ? timeEntry.hours.shortWatch() : (f >= 0.0) && (f < ref) ? Duration(minutes: (f * 60.0).round()).shortWatch() : timeEntry.hours.shortWatch();
+                  _customFieldsFieldController[i].text = cF;
+                  break;
+              }
+            } else {
+              _customFieldsFieldController[i].text = timeEntry.customField[iKey] ?? '';
+            }
           }
         }
         if ((timeEntry.customFieldName != null) && timeEntry.customFieldName.isNotEmpty) {
@@ -216,7 +293,7 @@ class TimeEntrySummaryPage
                         ).time_entry_summary_time_spent,
                       ),
                       readOnly: true,
-                      onTap: () => _showTimePicker(context),
+                      enabled: false,
                     ),
                     TextFormField(
                       textCapitalization: TextCapitalization.sentences,
@@ -269,9 +346,21 @@ class TimeEntrySummaryPage
                 _customFieldsFieldController.add(TextEditingController());
               }
               final String iKey = timeEntry.customField.keys.elementAt(i);
+              bool readOnly = false;
               if (timeEntry.customFieldName.containsKey(iKey)) {
               } else {
                 timeEntry.customFieldName[iKey] = "customField$iKey";
+              }
+              String cF = _customFieldsFieldController[i].text;
+              if (TimeEntry.bekannteFelder.containsKey(iKey)) {
+                switch (TimeEntry.bekannteFelder[iKey] as BekannteFelder) {
+                  case BekannteFelder.anteilTechnik:
+                    readOnly = true;
+                    break;
+                  case BekannteFelder.anteilPause:
+                    readOnly = true;
+                    break;
+                }
               }
               if (retP.child.runtimeType == Column) {
                 Column colRetP = retP.child as Column;
@@ -286,12 +375,8 @@ class TimeEntrySummaryPage
                       decoration: InputDecoration(
                         labelText: timeEntry.customFieldName[iKey],
                       ),
-                      readOnly: false,
-                      onChanged: (_) =>
-                          context
-                              .read<TimeEntrySummaryBloc>()
-                              .updateCustomField(
-                              _customFieldsFieldController[i].text, iKey),
+                      readOnly: readOnly,
+                      onTap: () => _showTimePickerCustomField(context, i, iKey),
                     );
                     colFormColRetP.children.add(widgetI);
                   }

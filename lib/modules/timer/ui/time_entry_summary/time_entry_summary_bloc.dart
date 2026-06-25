@@ -95,23 +95,37 @@ class TimeEntrySummaryBloc
     if (timeEntry!.startTime != "null") {
       timeEntry!.endTime = DateTime.parse(timeEntry!.startTime).add(timeSpent).toIso8601String();
     }
-    _emitIdleState();
+    await _emitIdleState();
   }
 
   Future<void> updateComment(String comment) async {
     timeEntry!.comment = comment;
+    await _emitIdleState();
   }
 
   Future<void> updateCustomField(String customField, String iKey) async {
     try {
       Map<String, String> cF = Map<String, String>.from(timeEntry!.customField);
-      cF[iKey] = customField;
+      if (TimeEntry.bekannteFelder.containsKey(iKey)) {
+        switch(TimeEntry.bekannteFelder[iKey] as BekannteFelder) {
+          case BekannteFelder.anteilTechnik:
+            cF[iKey] = customField;
+            break;
+          case BekannteFelder.anteilPause:
+            cF[iKey] = customField;
+            break;
+        }
+      } else {
+        cF[iKey] = customField;
+      }
       timeEntry!.customField = cF;
     }
     catch(e) {
       e.toString();
     }
-    finally {}
+    finally {
+    }
+    await _emitIdleState();
   }
   Future<void> updateCustomFieldName(String customFieldName, String iKey) async {
     try {
@@ -122,7 +136,9 @@ class TimeEntrySummaryBloc
     catch(e) {
       e.toString();
     }
-    finally {}
+    finally {
+    }
+    await _emitIdleState();
   }
 
   Future<void> submit() async {
