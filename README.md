@@ -1,6 +1,6 @@
 # Open Time Tracker Fork
 
-This fork has some basic offline abilities (caches the last requests - only use when you are sure, users are never changes on running machine) and allows the use of custom fields in time records. There are 2 default custom types that we use, therefore there these fields have "hard coded" types and names.
+This fork has some basic offline abilities (caches the last requests - only use when you are sure, user never changes on the running machine) and allows the use of custom fields in time records. There are 2 default custom types that we use, therefore there these fields have "hard coded" types and fallback names (requesting the names from the server is supported when the app is online).
 
 This repo contains the source code for time tracking application. This app is a client for Open Project that allows users to easily track their time spent on various tasks, projects.  
 You can also take a look at *[app's webpage](https://open-time-tracker.com)*
