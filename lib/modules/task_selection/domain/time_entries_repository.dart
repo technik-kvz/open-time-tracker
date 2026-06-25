@@ -220,11 +220,16 @@ class TimeEntry {
       customFieldName = defaultCustomFieldNames;
 
   Duration get hours {
-    Duration ret = hoursValue;
     if ((startTime != "null") && (endTime != "null")) {
-      ret = DateTime.parse(endTime).difference(DateTime.parse(startTime));
+      final DateTime? aD = DateTime.tryParse(startTime);
+      if (aD != null) {
+        final DateTime? bD = DateTime.tryParse(endTime);
+        if (bD != null) {
+          return bD.difference(aD);
+        }
+      }
     }
-    return ret;
+    return hoursValue;
   }
 }
 
@@ -240,10 +245,12 @@ int compareTimeEntries(TimeEntry a, TimeEntry b) {
     }
   }
   else if (a.id != null) {
+    final int aID = a.id!;
     if (b.id != null) {
-      if (a.id! < b.id!) {
+      final int bID = b.id!;
+      if (aID < bID) {
         return -1;
-      } else if (a.id! == b.id!) {
+      } else if (aID == bID) {
         return 0;
       }
       else {
