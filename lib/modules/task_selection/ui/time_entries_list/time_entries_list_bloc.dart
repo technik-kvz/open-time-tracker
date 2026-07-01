@@ -224,12 +224,12 @@ class TimeEntriesListBloc
     await _authService.logout();
   }
 
-  Future<void> setTimeEntry(TimeEntry timeEntry) async {
+  Future<void> setTimeEntry(TimeEntry timeEntry, List<TimeEntry> timeEntries) async {
     // Update the spentOn date to match the currently selected date
     // This ensures that when tracking time for a past or future date,
     // the time entry is recorded for that specific date
     timeEntry.spentOn = selectedDate;
-    await _timerRepository.setTimeEntry(timeEntry: timeEntry);
+    await _timerRepository.setTimeEntry(timeEntry: timeEntry, timeEntries: timeEntries);
   }
 
   Future<bool> deleteTimeEntry(int id) async {

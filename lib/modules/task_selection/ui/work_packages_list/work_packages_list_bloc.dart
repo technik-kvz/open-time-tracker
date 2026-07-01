@@ -33,6 +33,7 @@ class WorkPackagesListBloc
   final AppStateRepository _appStateRepository;
   final TimerRepository _timerRepository;
   final SettingsRepository _settingsRepository;
+  final TimeEntriesRepository _timeEntriesRepository;
   late String _projectId;
   CancelToken? _cancelToken;
 
@@ -41,6 +42,7 @@ class WorkPackagesListBloc
     this._appStateRepository,
     this._timerRepository,
     this._settingsRepository,
+    this._timeEntriesRepository,
   ) : super(const WorkPackagesListState.loading()) {
     WidgetsBinding.instance.addObserver(this);
   }
@@ -105,11 +107,18 @@ class WorkPackagesListBloc
   Future<void> setTimeEntry(WorkPackage workPackage) async {
     try {
       final selectedDate = await _appStateRepository.selectedDate;
+      final assigneeFilter = await _settingsRepository.assigneeFilter;
+      final List<TimeEntry> timerList = selectedDate != null ? await _timeEntriesRepository.list(
+        userId: assigneeFilter == 0 ? 'me' : null,
+        startDate: selectedDate, endDate:  selectedDate,
+        workPackageId: workPackage.id,
+        pageSize: 100
+      ) : [];
       final timeEntry = TimeEntry.fromWorkPackage(
         workPackage,
         selectedDate: selectedDate,
       );
-      await _timerRepository.setTimeEntry(timeEntry: timeEntry);
+      await _timerRepository.setTimeEntry(timeEntry: timeEntry, timeEntries: timerList);
 
       // Wait for timer state to propagate through the stream
       // This ensures the AppAuthorizedRouter receives the update before navigation

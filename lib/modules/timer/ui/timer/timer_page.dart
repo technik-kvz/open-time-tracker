@@ -142,7 +142,7 @@ class TimerPage extends EffectBlocPage<TimerBloc, TimerState, TimerEffect> {
                       }
                     }
                   },
-                  text: '    Startzeit: ${DateFormat("yyyy-MM-dd hh:mm").format(
+                  text: '    Startzeit: ${DateFormat("yyyy-MM-dd HH:mm").format(
                       state.startTime.toLocal())}    ',
                   textStyle: Theme
                       .of(context)
@@ -179,7 +179,7 @@ class TimerPage extends EffectBlocPage<TimerBloc, TimerState, TimerEffect> {
                           state.startTime, selectedDateTime.toUtc());
                     }
                   },
-                  text: '    Endzeit: ${DateFormat("hh:mm").format(
+                  text: '    Endzeit: ${DateFormat("HH:mm").format(
                       state.endTime.toLocal())}    ',
                   textStyle: Theme
                       .of(context)

@@ -91,11 +91,13 @@ abstract class TaskSelectionModule {
     AppStateRepository appStateRepository,
     TimerRepository timerRepository,
     SettingsRepository settingsRepository,
+    TimeEntriesRepository timeEntriesRepository,
   ) => WorkPackagesListBloc(
     workPackagesRepository,
     appStateRepository,
     timerRepository,
     settingsRepository,
+    timeEntriesRepository,
   );
 
   @injectable

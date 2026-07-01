@@ -77,6 +77,17 @@ class NotificationSelectionListPage
                   SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final timeEntry = timeEntries[index];
+                      final DateTime? indexD = DateTime.tryParse(timeEntry.startTime);
+                      bool colorRed = false;
+                      if ((index > 0) && (indexD != null)) {
+                        for (int j = index - 1; j >= 0; j--) {
+                          final DateTime? jD = DateTime.tryParse(timeEntries[j].endTime);
+                          if ((jD != null) && (jD.difference(indexD).inMinutes >= 1)) {
+                            colorRed = true;
+                            break;
+                          }
+                        }
+                      }
                       return TimeEntryListItem(
                         workPackageSubject: timeEntry.workPackageSubject,
                         projectTitle: timeEntry.projectTitle,
@@ -85,6 +96,7 @@ class NotificationSelectionListPage
                         hours: timeEntry.hours,
                         comment: timeEntry.comment,
                         customField: timeEntry.customField,
+                        colorRed: colorRed,
                         action: () {
                           context
                               .read<NotificationSelectionListBloc>()

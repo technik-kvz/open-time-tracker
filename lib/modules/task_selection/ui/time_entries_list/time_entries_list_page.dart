@@ -155,6 +155,17 @@ class TimeEntriesListPage
                         delegate: SliverChildBuilderDelegate((context, index) {
                           //print("-------------------1------------------- \n");
                           final timeEntry = timeEntries[index];
+                          final DateTime? indexD = DateTime.tryParse(timeEntry.startTime);
+                          bool colorRed = false;
+                          if ((index > 0) && (indexD != null)) {
+                            for (int j = index - 1; j >= 0; j--) {
+                              final DateTime? jD = DateTime.tryParse(timeEntries[j].endTime);
+                              if ((jD != null) && (jD.difference(indexD).inMinutes >= 1)) {
+                                colorRed = true;
+                                break;
+                              }
+                            }
+                          }
                           return TimeEntryListItem(
                             workPackageSubject: timeEntry.workPackageSubject,
                             projectTitle: timeEntry.projectTitle,
@@ -163,10 +174,11 @@ class TimeEntriesListPage
                             hours: timeEntry.hours,
                             comment: timeEntry.comment,
                             customField: timeEntry.customField,
+                            colorRed: colorRed,
                             action: () async {
                               await context
                                   .read<TimeEntriesListBloc>()
-                                  .setTimeEntry(timeEntry);
+                                  .setTimeEntry(timeEntry, timeEntries);
                               if (!isViewingToday) {
                                 // For past dates, go directly to edit screen
                                 if (context.mounted) {
@@ -235,6 +247,7 @@ class _ItemPlaceholder extends StatelessWidget {
       hours: Duration(seconds: 0),
       comment: '',
       customField: {},
+      colorRed: false,
     );
   }
 }

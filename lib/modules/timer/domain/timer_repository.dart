@@ -6,10 +6,11 @@ abstract class TimerRepository {
   Future<TimeEntry?> get timeEntry;
   Future<DateTime> get startTime;
   Future<DateTime> get endTime;
+  Future<List<TimeEntry>?> get timeEntries;
 
   Stream<bool> observeIsSet();
 
-  Future<void> setTimeEntry({required TimeEntry timeEntry});
+  Future<void> setTimeEntry({required TimeEntry timeEntry, required List<TimeEntry> timeEntries});
 
   Future<void> startTimer({required DateTime startTime});
 

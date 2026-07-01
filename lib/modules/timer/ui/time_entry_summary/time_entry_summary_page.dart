@@ -152,7 +152,7 @@ class TimeEntrySummaryPage
   void onStateChange(BuildContext context, TimeEntrySummaryState state) {
     super.onStateChange(context, state);
     state.whenOrNull(
-      idle: (title, timeEntry, commentSuggestions) {
+      idle: (title, timeEntry, commentSuggestions, timeEntries) {
         this._timeEntry = timeEntry;
         if ((timeEntry.customField != null) && timeEntry.customField.isNotEmpty) {
           for (int i=0; i<timeEntry.customField.length; i++) {
@@ -219,7 +219,7 @@ class TimeEntrySummaryPage
 
     final Widget body = state.when(
       loading: () => const Center(child: ActivityIndicator()),
-      idle: (title, timeEntry, commentSuggestions) {
+      idle: (title, timeEntry, commentSuggestions, timeEntries) {
         this._timeEntry = timeEntry;
         if (timeEntry.customField != null) {
           if (timeEntry.customField.isNotEmpty) {
@@ -240,6 +240,22 @@ class TimeEntrySummaryPage
           }
         }
         _timeFieldController.text = timeEntry.hours.shortWatch();
+        DateTime? _startTime = DateTime.tryParse(timeEntry.startTime);
+        if (_startTime == null) {
+          if (timeEntries != null) {
+            for (int j = 0; j < timeEntries.length; j++) {
+              DateTime? jD = DateTime.tryParse(timeEntries[j].endTime);
+              if (jD != null) {
+                _startTime = jD;
+              }
+            }
+            _startTime ??= DateTime.now();
+          } else {
+            _startTime = DateTime.now();
+          }
+        }
+        DateTime? _endTime = DateTime.tryParse(timeEntry.endTime);
+        _endTime ??= _startTime;
         Padding retP = Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -268,7 +284,7 @@ class TimeEntrySummaryPage
                       enabled: false,
                     ),
                     TextFormField(
-                      initialValue: DateFormat("yyyy-MM-dd hh:mm").format(DateTime.parse(timeEntry.startTime).toLocal()),
+                      initialValue: DateFormat("yyyy-MM-dd HH:mm").format(_startTime.toLocal()),
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(
                           context,
@@ -277,7 +293,7 @@ class TimeEntrySummaryPage
                       enabled: false,
                     ),
                     TextFormField(
-                      initialValue: DateFormat("yyyy-MM-dd hh:mm").format(DateTime.parse(timeEntry.endTime).toLocal()),
+                      initialValue: DateFormat("yyyy-MM-dd HH:mm").format(_endTime.toLocal()),
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(
                           context,

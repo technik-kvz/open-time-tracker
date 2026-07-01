@@ -87,7 +87,15 @@ class NotificationSelectionListBloc
   }
 
   Future<void> setTimeEntry(TimeEntry timeEntry) async {
-    await _timerRepository.setTimeEntry(timeEntry: timeEntry);
+    final DateTime? startTime = DateTime.tryParse(timeEntry.startTime);
+    final DateTime? endTime = DateTime.tryParse(timeEntry.endTime);
+    final List<TimeEntry> timeEntries = await _timeEntriesRepository.list(
+      userId: 'me',
+      startDate: startTime ?? DateTime.now(),
+      endDate: endTime ?? DateTime.now(),
+      pageSize: 100,
+    );
+    await _timerRepository.setTimeEntry(timeEntry: timeEntry, timeEntries: timeEntries);
     // Wait for timer state to propagate before completing
     await _waitForTimerStateConfirmation();
     emitEffect(const NotificationSelectionListEffect.complete());
@@ -96,7 +104,15 @@ class NotificationSelectionListBloc
   Future<void> setTimeEntryFromWorkPackage(WorkPackage workPackage) async {
     try {
       final timeEntry = TimeEntry.fromWorkPackage(workPackage);
-      await _timerRepository.setTimeEntry(timeEntry: timeEntry);
+      final DateTime? startTime = DateTime.tryParse(timeEntry.startTime);
+      final DateTime? endTime = DateTime.tryParse(timeEntry.endTime);
+      final List<TimeEntry> timeEntries = await _timeEntriesRepository.list(
+        userId: 'me',
+        startDate: startTime ?? DateTime.now(),
+        endDate: endTime ?? DateTime.now(),
+        pageSize: 100,
+      );
+      await _timerRepository.setTimeEntry(timeEntry: timeEntry, timeEntries: timeEntries);
       // Wait for timer state to propagate before completing
       await _waitForTimerStateConfirmation();
       emitEffect(const NotificationSelectionListEffect.complete());

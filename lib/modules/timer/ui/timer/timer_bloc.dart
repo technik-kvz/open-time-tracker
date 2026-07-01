@@ -16,6 +16,7 @@ class TimerState with _$TimerState {
     required DateTime endTime,
     required String title,
     required String subtitle,
+    required List<TimeEntry>? timeEntries,
   }) = _Idle;
 }
 
@@ -43,9 +44,10 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
     : super(
         TimerState.idle(
           startTime: DateTime.now(),
-          endTime: DateTime.now(),
+          endTime: DateTime.now(), /// TODO
           title: '',
           subtitle: '',
+          timeEntries: [],
         ),
       );
 
@@ -54,6 +56,7 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
       _timerRepository.timeEntry,
       _timerRepository.startTime,
       _timerRepository.endTime,
+      _timerRepository.timeEntries,
     ]);
     try {
       final timeEntry = data[0] as TimeEntry?;
@@ -66,13 +69,20 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
             endTime: DateTime.now(),
             title: '',
             subtitle: '',
+            timeEntries: [],
           ),
         );
         return;
       }
 
-      DateTime startTime = DateTime.tryParse(timeEntry.startTime)!;
-      DateTime endTime = DateTime.tryParse(timeEntry.endTime)!;
+      List<TimeEntry> timeEntries = await _timerRepository.timeEntries ?? [];
+      final DateTime? lastEnd = timeEntries.isEmpty ? null : DateTime.tryParse(timeEntries.last.endTime);
+      DateTime startTime = DateTime.tryParse(timeEntry.startTime) ?? lastEnd ?? state.startTime;
+      DateTime endTime = DateTime.tryParse(timeEntry.endTime) ?? (lastEnd != null ? DateTime.now() : state.endTime);
+      if (startTime.toIso8601String() != timeEntry.startTime || endTime.toIso8601String() != timeEntry.endTime) {
+        emit(state.copyWith(startTime: startTime, endTime: endTime));
+        await _timerRepository.updateTimer(startTime: startTime, stopTime: endTime);
+      }
 
       final taskChanged = _currentTaskTitle != null && _currentTaskTitle != timeEntry.workPackageSubject;
       if (taskChanged) {
@@ -86,6 +96,7 @@ class TimerBloc extends EffectCubit<TimerState, TimerEffect> {
           endTime: endTime,
           title: timeEntry.workPackageSubject,
           subtitle: timeEntry.projectTitle,
+          timeEntries: timeEntries
         ),
       );
     } catch (e) {

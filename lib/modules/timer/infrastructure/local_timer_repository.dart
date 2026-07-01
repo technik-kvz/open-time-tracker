@@ -6,6 +6,7 @@ import 'package:rxdart/rxdart.dart';
 
 class LocalTimerRepository implements TimerRepository {
   final TimerStorage _timerStorage;
+  List<TimeEntry>? _timeEntries;
 
   final _state = BehaviorSubject<bool>();
 
@@ -41,6 +42,11 @@ class LocalTimerRepository implements TimerRepository {
   }
 
   @override
+  Future<List<TimeEntry>?> get timeEntries async {
+    return _timeEntries;
+  }
+
+  @override
   Future<TimeEntry?> get timeEntry async {
     return _timerStorage.getTimeEntry();
   }
@@ -69,7 +75,7 @@ class LocalTimerRepository implements TimerRepository {
   }
 
   @override
-  Future<void> setTimeEntry({required TimeEntry timeEntry}) async {
+  Future<void> setTimeEntry({required TimeEntry timeEntry, required List<TimeEntry> timeEntries}) async {
     DateTime sT = DateTime.now();
     if (timeEntry.startTime != "null") {
       sT = DateTime.parse(timeEntry.startTime);
@@ -78,6 +84,7 @@ class LocalTimerRepository implements TimerRepository {
     if (timeEntry.endTime != "null") {
       eT = DateTime.parse(timeEntry.endTime);
     }
+    _timeEntries = timeEntries;
     await Future.wait([
       _timerStorage.setTimeEntry(timeEntry),
     ]);

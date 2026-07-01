@@ -19,6 +19,7 @@ class TimeEntryListItem extends StatelessWidget {
   final Map<String, String> customField;
   final Function()? action;
   final Future<bool> Function()? dismissAction;
+  final bool colorRed;
 
   // Init
   const TimeEntryListItem({
@@ -32,6 +33,7 @@ class TimeEntryListItem extends StatelessWidget {
     this.action,
     this.dismissAction,
     required this.customField,
+    required this.colorRed,
   });
 
   Future<bool> _showCloseDialog(BuildContext context) async {
@@ -100,11 +102,12 @@ class TimeEntryListItem extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      "${DateFormat("yyyy-MM-dd hh:mm").format(DateTime.parse(startTime))} - ${DateFormat("hh:mm").format(DateTime.parse(endTime))}",
+                      "${DateFormat("yyyy-MM-dd HH:mm").format(DateTime.parse(startTime).toLocal())} - ${DateFormat("HH:mm").format(DateTime.parse(endTime).toLocal())}${colorRed ? "\nFEHLER\nBeginnt < Ende(Vorgänger)!\nBitte korrigeren!" : ""}",
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
+                        color: colorRed ? const Color.fromARGB(255, 255, 0, 0) : const Color.fromARGB(255, 0, 0, 0),
                       ),
                     ),
                   ),

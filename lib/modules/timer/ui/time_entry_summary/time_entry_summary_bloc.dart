@@ -15,6 +15,7 @@ class TimeEntrySummaryState with _$TimeEntrySummaryState {
     required String title,
     required TimeEntry timeEntry,
     required List<String>? commentSuggestions,
+    required List<TimeEntry>? timeEntries,
   }) = _Idle;
 }
 
@@ -34,6 +35,7 @@ class TimeEntrySummaryBloc
 
   TimeEntry? timeEntry;
   List<String>? _commentSuggestions;
+  List<TimeEntry>? _timeEntries;
   bool _disposed = false;
 
   TimeEntrySummaryBloc(
@@ -51,6 +53,7 @@ class TimeEntrySummaryBloc
           title: timeEntry!.workPackageSubject,
           timeEntry: timeEntry!,
           commentSuggestions: _commentSuggestions,
+          timeEntries: _timeEntries,
         ),
       );
     }
@@ -63,7 +66,7 @@ class TimeEntrySummaryBloc
       final workPackageIdString = _timeEntry.workPackageHref.split('/').last;
       workPackageId = int.tryParse(workPackageIdString);
     }
-    final timeEntries = await _timeEntriesRepository.list(workPackageId: workPackageId, pageSize: 100,);
+    _timeEntries = await _timeEntriesRepository.list(workPackageId: workPackageId, pageSize: 100,);
     _timeEntry = await _timerRepository.timeEntry;
     
     if (_timeEntry != null) {
@@ -74,8 +77,8 @@ class TimeEntrySummaryBloc
 
       try {
         if (_disposed) return; // Exit after network call if disposed
-        
-        var comments = timeEntries.map((e) => e.comment ?? '').toSet().toList();
+
+        var comments = _timeEntries!.map((e) => e.comment ?? '').toSet().toList();
         comments.remove('');
         _commentSuggestions = comments;
         await _emitIdleState();

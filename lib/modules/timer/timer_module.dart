@@ -15,7 +15,7 @@ import 'package:open_project_time_tracker/modules/timer/ui/timer/timer_bloc.dart
 abstract class TimerModule {
   @lazySingleton
   TimerRepository timerRepository() => LocalTimerRepository(
-        TimerStorage(PreferencesStorage()),
+        TimerStorage(PreferencesStorage(), ),
       );
 
   @lazySingleton
